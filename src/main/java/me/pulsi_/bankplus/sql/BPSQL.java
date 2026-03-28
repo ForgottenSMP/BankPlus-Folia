@@ -11,10 +11,9 @@ import java.io.File;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * BankPlus MySQL system save both database and files to synchronize
@@ -64,12 +63,15 @@ public class BPSQL {
      * @return The argument based on the specified player.
      */
     public static String GET_DEFAULT_PLAYER_ARGUMENTS(OfflinePlayer p, String bankName) {
-        return p.getUniqueId() + "," +
-                p.getName() + "," +
-                "1," +
-                (ConfigValues.getMainGuiName().equals(bankName) ? ConfigValues.getStartAmount() : "0") + "," +
-                "0," +
-                "0";
+        String playerName = p.getName();
+        String startAmount = ConfigValues.getMainGuiName().equals(bankName) ? ConfigValues.getStartAmount().toPlainString() : "0";
+        return "'" + p.getUniqueId() + "'," +
+                "'" + (playerName == null ? "" : playerName.replace("'", "''")) + "'," +
+                "'1'," +
+                "'" + startAmount + "'," +
+                "'0'," +
+                "'0'," +
+                "'0'";
     }
 
     private static Connection connection;
@@ -103,9 +105,13 @@ public class BPSQL {
      */
     public static int getBankLevel(OfflinePlayer player, String bankName) {
         String level = get(player, bankName, SQLSearch.BANK_LEVEL);
-        if (level.isEmpty()) return 0;
+        if (level == null || level.isEmpty()) return 0;
 
-        return Integer.parseInt(level);
+        try {
+            return Integer.parseInt(level);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     /**
@@ -117,9 +123,13 @@ public class BPSQL {
      */
     public static BigDecimal getDebt(OfflinePlayer player, String bankName) {
         String debt = get(player, bankName, SQLSearch.DEBT);
-        if (debt.isEmpty()) return BigDecimal.ZERO;
+        if (debt == null || debt.isEmpty()) return BigDecimal.ZERO;
 
-        return new BigDecimal(debt);
+        try {
+            return new BigDecimal(debt);
+        } catch (NumberFormatException e) {
+            return BigDecimal.ZERO;
+        }
     }
 
     /**
@@ -131,9 +141,13 @@ public class BPSQL {
      */
     public static BigDecimal getInterest(OfflinePlayer player, String bankName) {
         String interest = get(player, bankName, SQLSearch.INTEREST);
-        if (interest.isEmpty()) return BigDecimal.ZERO;
+        if (interest == null || interest.isEmpty()) return BigDecimal.ZERO;
 
-        return new BigDecimal(interest);
+        try {
+            return new BigDecimal(interest);
+        } catch (NumberFormatException e) {
+            return BigDecimal.ZERO;
+        }
     }
 
     /**
@@ -145,9 +159,13 @@ public class BPSQL {
      */
     public static BigDecimal getMoney(OfflinePlayer player, String bankName) {
         String money = get(player, bankName, SQLSearch.MONEY);
-        if (money.isEmpty()) return BigDecimal.ZERO;
+        if (money == null || money.isEmpty()) return BigDecimal.ZERO;
 
-        return new BigDecimal(money);
+        try {
+            return new BigDecimal(money);
+        } catch (NumberFormatException e) {
+            return BigDecimal.ZERO;
+        }
     }
 
     /**
@@ -158,7 +176,7 @@ public class BPSQL {
      * @param newValue The new value for the money.
      */
     public static void setBankLevel(OfflinePlayer player, String bankName, BigDecimal newValue) {
-        set(player, bankName, SQLSearch.INTEREST, newValue.toPlainString());
+        set(player, bankName, SQLSearch.BANK_LEVEL, newValue.toPlainString());
     }
 
     /**
@@ -169,7 +187,7 @@ public class BPSQL {
      * @param newValue The new value for the money.
      */
     public static void setDebt(OfflinePlayer player, String bankName, BigDecimal newValue) {
-        set(player, bankName, SQLSearch.INTEREST, newValue.toPlainString());
+        set(player, bankName, SQLSearch.DEBT, newValue.toPlainString());
     }
 
     /**
@@ -208,17 +226,20 @@ public class BPSQL {
         String debt = bankEconomy.getDebt(player).toPlainString();
         String money = bankEconomy.getBankBalance(player).toPlainString();
 
-        String insert = "INSERT INTO " + bankName + " (uuid, bank_level, debt, money) " + "VALUES(" +
-                player.getUniqueId() + ", " + level + ", " + debt + ", " + money + ")";
-
-        String set = "bank_level='" + level + "', " + "debt='" + debt + "', " + "money='" + money + "'";
-
         String query;
-        if (ConfigValues.isMySqlEnabled()) query = insert + " ON DUPLICATE KEY UPDATE " + set;
-        else query = insert + " ON CONFLICT(uuid) DO UPDATE SET " + set;
-
-        try {
-            connection.prepareStatement(query).executeUpdate();
+        if (ConfigValues.isMySqlEnabled())
+            query = "INSERT INTO " + bankName + " (uuid, bank_level, debt, money) " +
+                    "VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE " +
+                    "bank_level=VALUES(bank_level), debt=VALUES(debt), money=VALUES(money)";
+        else query = "INSERT INTO " + bankName + " (uuid, bank_level, debt, money) " +
+                "VALUES (?, ?, ?, ?) ON CONFLICT(uuid) DO UPDATE SET " +
+                "bank_level=excluded.bank_level, debt=excluded.debt, money=excluded.money";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, player.getUniqueId().toString());
+            statement.setString(2, String.valueOf(level));
+            statement.setString(3, debt);
+            statement.setString(4, money);
+            statement.executeUpdate();
         } catch (SQLException e) {
             BPLogger.Console.error(e, "Cannot save player " + player.getName() + " in bank " + bankName + ".");
         }
@@ -231,9 +252,12 @@ public class BPSQL {
      * @return true if a record with its uuid exists, false otherwise.
      */
     public static boolean isRegistered(OfflinePlayer player, String bankName) {
-        try {
-            ResultSet set = connection.prepareStatement("SELECT 1 FROM " + bankName + " WHERE uuid='" + player.getUniqueId() + "' LIMIT 1").executeQuery();
-            return set.next();
+        String query = "SELECT 1 FROM " + bankName + " WHERE uuid=? LIMIT 1";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, player.getUniqueId().toString());
+            try (ResultSet set = statement.executeQuery()) {
+                return set.next();
+            }
         } catch (SQLException e) {
             BPLogger.Console.error(e, "Cannot check if player " + player.getName() + " is registered in the bank " + bankName + ".");
             return false;
@@ -248,26 +272,30 @@ public class BPSQL {
      * @param player The player to register.
      */
     public static void fillRecords(OfflinePlayer player) {
-        if (ConfigValues.isMySqlEnabled())
-            for (String bank : BPEconomy.nameList()) {
-                try {
-                    connection.prepareStatement(
-                            "INSERT IGNORE INTO " + bank + " VALUES (" + GET_DEFAULT_PLAYER_ARGUMENTS(player, bank) + ")"
-                    ).executeUpdate();
-                } catch (SQLException e) {
-                    BPLogger.Console.error(e, "Cannot insert base value in bank " + bank + " for player " + player.getName() + ".");
-                }
+        String playerName = player.getName() == null ? "" : player.getName();
+        for (String bank : BPEconomy.nameList()) {
+            String money = ConfigValues.getMainGuiName().equals(bank) ? ConfigValues.getStartAmount().toPlainString() : "0";
+            String query;
+            if (ConfigValues.isMySqlEnabled())
+                query = "INSERT IGNORE INTO " + bank +
+                        " (uuid, account_name, bank_level, money, interest, debt) " +
+                        "VALUES (?, ?, ?, ?, ?, ?)";
+            else query = "INSERT OR IGNORE INTO " + bank +
+                    " (uuid, account_name, bank_level, money, interest, debt) " +
+                    "VALUES (?, ?, ?, ?, ?, ?)";
+
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setString(1, player.getUniqueId().toString());
+                statement.setString(2, playerName);
+                statement.setString(3, "0");
+                statement.setString(4, money);
+                statement.setString(5, "0");
+                statement.setString(6, "0");
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                BPLogger.Console.error(e, "Cannot insert base value in bank " + bank + " for player " + player.getName() + ".");
             }
-        else
-            for (String bank : BPEconomy.nameList()) {
-                try {
-                    connection.prepareStatement(
-                            "INSERT OR IGNORE INTO " + bank + " VALUES (" + GET_DEFAULT_PLAYER_ARGUMENTS(player, bank) + ")"
-                    ).executeUpdate();
-                } catch (SQLException e) {
-                    BPLogger.Console.error(e, "Cannot insert base value in bank " + bank + " for player " + player.getName() + ".");
-                }
-            }
+        }
     }
 
     public static class MySQL {
@@ -353,17 +381,16 @@ public class BPSQL {
             }
         }
 
-        String query = "SELECT " + columnName + " FROM " + bankName + " WHERE uuid='" + player.getUniqueId() + "'";
+        String query = "SELECT " + columnName + " FROM " + bankName + " WHERE uuid=? LIMIT 1";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, player.getUniqueId().toString());
 
-        ResultSet set;
-        try {
-            set = connection.prepareStatement(query).executeQuery();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+            try (ResultSet set = statement.executeQuery()) {
+                if (!set.next()) return "";
 
-        try {
-            return set.getString(columnName);
+                String value = set.getString(columnName);
+                return value == null ? "" : value;
+            }
         } catch (SQLException e) {
             BPLogger.Console.error(e, "Could not get data for player " + player.getName() + ".");
             return "";
@@ -394,14 +421,16 @@ public class BPSQL {
         }
 
         String query;
+        if (ConfigValues.isMySqlEnabled())
+            query = "INSERT INTO " + bankName + " (uuid, " + columnName + ") VALUES (?, ?) " +
+                    "ON DUPLICATE KEY UPDATE " + columnName + "=VALUES(" + columnName + ")";
+        else query = "INSERT INTO " + bankName + " (uuid, " + columnName + ") VALUES (?, ?) " +
+                "ON CONFLICT(uuid) DO UPDATE SET " + columnName + "=excluded." + columnName;
 
-        String insert = "INSERT INTO " + bankName + " (uuid, " + columnName + ") VALUES(" + player.getUniqueId() + ", " + newValue + ")";
-        String set = columnName + "='" + newValue + "'";
-        if (ConfigValues.isMySqlEnabled()) query = insert + " ON DUPLICATE KEY UPDATE " + set;
-        else query = insert + " ON CONFLICT(uuid) DO UPDATE SET " + set;
-
-        try {
-            connection.prepareStatement(query).executeUpdate();
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, player.getUniqueId().toString());
+            statement.setString(2, newValue);
+            statement.executeUpdate();
         } catch (SQLException e) {
             BPLogger.Console.error(e, "Cannot set " + columnName + " for player " + player.getName() + " in bank " + bankName + ".");
         }
