@@ -1,5 +1,6 @@
 package me.pulsi_.bankplus.loanSystem;
 
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import me.pulsi_.bankplus.bankSystem.Bank;
 import me.pulsi_.bankplus.values.ConfigValues;
 import org.bukkit.OfflinePlayer;
@@ -13,7 +14,7 @@ public class BPLoan {
     private final Bank senderBank, receiverBank, requestedBank;
     private final BigDecimal moneyGiven;
     private BigDecimal moneyToReturn;
-    private BukkitTask task;
+    private ScheduledTask task;
     private long timeLeft;
     private int instalments, instalmentsPoint;
     private final LoanType loanType;
@@ -120,7 +121,7 @@ public class BPLoan {
         return moneyToReturn;
     }
 
-    public BukkitTask getTask() {
+    public ScheduledTask getTask() {
         return task;
     }
 
@@ -148,7 +149,7 @@ public class BPLoan {
         this.moneyToReturn = moneyToReturn;
     }
 
-    public void setTask(BukkitTask task) {
+    public void setTask(ScheduledTask task) {
         this.task = task;
     }
 

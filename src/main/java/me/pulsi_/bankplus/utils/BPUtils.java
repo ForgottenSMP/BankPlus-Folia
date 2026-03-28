@@ -346,7 +346,7 @@ public class BPUtils {
     }
 
     public static void callEvent(Event event) {
-        Bukkit.getScheduler().runTask(BankPlus.INSTANCE(), () -> Bukkit.getPluginManager().callEvent(event));
+        Bukkit.getGlobalRegionScheduler().run(BankPlus.INSTANCE(), (task) -> Bukkit.getPluginManager().callEvent(event));
     }
 
     /**

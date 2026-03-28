@@ -1,5 +1,6 @@
 package me.pulsi_.bankplus.listeners;
 
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import me.pulsi_.bankplus.account.BPPlayer;
 import me.pulsi_.bankplus.account.PlayerRegistry;
 import org.bukkit.entity.Player;
@@ -17,7 +18,7 @@ public class InventoryCloseListener implements Listener {
         BPPlayer player = PlayerRegistry.get(p);
         if (player == null) return;
 
-        BukkitTask updating = player.getBankUpdatingTask();
+        ScheduledTask updating = player.getBankUpdatingTask();
         if (updating != null) updating.cancel();
 
         player.setOpenedBank(null);

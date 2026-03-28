@@ -27,7 +27,7 @@ public class BPBankTop {
      * Update the bank top.
      */
     public static void updateBankTop() {
-        Bukkit.getScheduler().runTaskAsynchronously(BankPlus.INSTANCE(), () -> {
+        Bukkit.getAsyncScheduler().runNow(BankPlus.INSTANCE(), (task) -> {
             HashMap<String, BigDecimal> balances = BPEconomy.getAllEconomiesBankBalances();
             List<BankTopPlayer> players = new ArrayList<>();
 
@@ -68,7 +68,7 @@ public class BPBankTop {
      */
     public static void restartBankTopUpdateTask() {
         long delay = ConfigValues.getUpdateBankTopDelay();
-        BPTaskManager.setTask(BPTaskManager.BANKTOP_BROADCAST_TASK, Bukkit.getScheduler().runTaskTimer(BankPlus.INSTANCE(), BPBankTop::updateBankTop, delay, delay));
+        BPTaskManager.setTask(BPTaskManager.BANKTOP_BROADCAST_TASK, Bukkit.getGlobalRegionScheduler().runAtFixedRate(BankPlus.INSTANCE(), (task) -> BPBankTop.updateBankTop(), delay, delay));
     }
 
     /**

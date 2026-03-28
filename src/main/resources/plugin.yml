@@ -4,6 +4,7 @@ main: me.pulsi_.bankplus.BankPlus
 api-version: '1.21'
 authors: [ Pulsi_ ]
 description: The best free bank plugin on internet!
+folia-supported: true
 depend:
   - Vault
 softdepend:

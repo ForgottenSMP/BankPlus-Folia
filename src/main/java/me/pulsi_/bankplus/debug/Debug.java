@@ -18,7 +18,7 @@ public class Debug {
         BPMessages.sendMessage(debugReceiver, "Simulating a banktop update:");
         BPMessages.sendMessage(debugReceiver, " ");
 
-        Bukkit.getScheduler().runTaskAsynchronously(BankPlus.INSTANCE(), () -> {
+        Bukkit.getAsyncScheduler().runNow(BankPlus.INSTANCE(), (task) -> {
             HashMap<String, BigDecimal> balances = BPEconomy.getAllEconomiesBankBalances();
             BPMessages.sendMessage(debugReceiver, "|  All player balances: " + balances.size());
 

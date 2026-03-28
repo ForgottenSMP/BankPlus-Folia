@@ -67,7 +67,7 @@ public class PlayerRegistry {
             return bpPlayer;
         }
 
-        Bukkit.getScheduler().runTaskAsynchronously(BankPlus.INSTANCE(), () -> bank.getBankEconomy().loadPlayer(p, wasRegistered));
+        Bukkit.getAsyncScheduler().runNow(BankPlus.INSTANCE(), (task) -> bank.getBankEconomy().loadPlayer(p, wasRegistered));
         players.putIfAbsent(uuid, bpPlayer);
         return bpPlayer;
     }

@@ -1,5 +1,6 @@
 package me.pulsi_.bankplus.account;
 
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import me.pulsi_.bankplus.bankSystem.Bank;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
@@ -9,7 +10,7 @@ public class BPPlayer {
     private final Player player;
 
     private Bank openedBank;
-    private BukkitTask bankUpdatingTask, closingTask;
+    private ScheduledTask bankUpdatingTask, closingTask;
 
     // Values to check if the player is doing a deposit or withdraw through chat.
     private boolean depositing, withdrawing;
@@ -26,11 +27,11 @@ public class BPPlayer {
         return openedBank;
     }
 
-    public BukkitTask getBankUpdatingTask() {
+    public ScheduledTask getBankUpdatingTask() {
         return bankUpdatingTask;
     }
 
-    public BukkitTask getClosingTask() {
+    public ScheduledTask getClosingTask() {
         return closingTask;
     }
 
@@ -46,11 +47,11 @@ public class BPPlayer {
         this.openedBank = openedBank;
     }
 
-    public void setBankUpdatingTask(BukkitTask bankUpdatingTask) {
+    public void setBankUpdatingTask(ScheduledTask bankUpdatingTask) {
         this.bankUpdatingTask = bankUpdatingTask;
     }
 
-    public void setClosingTask(BukkitTask closingTask) {
+    public void setClosingTask(ScheduledTask closingTask) {
         this.closingTask = closingTask;
     }
 

@@ -53,7 +53,6 @@ public class BPCmdRegistry {
         new SaveAllDataCmd(commandsConfig, "saveAllData").register();
         new SetCmd(commandsConfig, "set").register();
         new SetLevelCmd(commandsConfig, "setLevel").register();
-        new TransferCmd(commandsConfig, "transfer").register();
         new UpdateBankTopCmd(commandsConfig, "updateBankTop").register();
         new UpgradeCmd(commandsConfig, "upgrade").register();
         new ViewCmd(commandsConfig, "view").register();

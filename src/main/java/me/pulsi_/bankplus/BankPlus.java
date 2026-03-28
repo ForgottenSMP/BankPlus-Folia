@@ -19,6 +19,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.util.concurrent.TimeUnit;
 
 public final class BankPlus extends JavaPlugin {
 
@@ -56,7 +57,7 @@ public final class BankPlus extends JavaPlugin {
         if (!setupEconomy()) {
             if (tries < 4) {
                 BPLogger.Console.warn("BankPlus didn't find any economy plugin on this server, the plugin will re-search in 2 seconds. (" + tries + " try)");
-                Bukkit.getScheduler().runTaskLater(this, this::onEnable, 40);
+                Bukkit.getGlobalRegionScheduler().runDelayed(this, (task) -> onEnable(), 40);
                 tries++;
                 return;
             }
@@ -104,7 +105,7 @@ public final class BankPlus extends JavaPlugin {
         }
 
         if (ConfigValues.isUpdateCheckerEnabled())
-            Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> isUpdated = isPluginUpdated(), 0, (8 * 1200) * 60 /*8 hours*/);
+            Bukkit.getAsyncScheduler().runAtFixedRate(this, (task) -> isUpdated = isPluginUpdated(), 0, 8, TimeUnit.HOURS);
     }
 
     @Override

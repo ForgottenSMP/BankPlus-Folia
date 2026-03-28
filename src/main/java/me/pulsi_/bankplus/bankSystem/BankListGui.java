@@ -1,5 +1,6 @@
 package me.pulsi_.bankplus.bankSystem;
 
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.pulsi_.bankplus.BankPlus;
 import me.pulsi_.bankplus.account.BPPlayer;
@@ -39,7 +40,7 @@ public class BankListGui extends BankGui {
     public void openBankGui(Player p, boolean bypass) {
         BPPlayer player = PlayerRegistry.get(p);
 
-        BukkitTask updating = player.getBankUpdatingTask();
+        ScheduledTask updating = player.getBankUpdatingTask();
         if (updating != null) updating.cancel();
 
         if (MultipleBanksValues.isDirectlyOpenIf1IsAvailable()) {
@@ -59,7 +60,7 @@ public class BankListGui extends BankGui {
         updateBankGuiMeta(bankListInventory, p);
 
         long delay = MultipleBanksValues.getUpdateDelay();
-        if (delay >= 0) player.setBankUpdatingTask(Bukkit.getScheduler().runTaskTimer(BankPlus.INSTANCE(), () -> updateBankGuiMeta(bankListInventory, p), delay, delay));
+        if (delay >= 0) player.setBankUpdatingTask(Bukkit.getGlobalRegionScheduler().runAtFixedRate(BankPlus.INSTANCE(), (task) -> updateBankGuiMeta(bankListInventory, p), delay, delay));
 
         player.setOpenedBank(getOriginBank());
         if (ConfigValues.isPersonalSoundEnabled()) BPUtils.playSound(ConfigValues.getPersonalSound(), p);

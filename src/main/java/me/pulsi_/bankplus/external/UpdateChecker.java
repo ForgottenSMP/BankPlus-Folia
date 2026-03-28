@@ -29,7 +29,7 @@ public class UpdateChecker implements Listener {
         else message = null;
 
         if (message != null)
-            Bukkit.getScheduler().runTaskLater(BankPlus.INSTANCE(), () -> {
+            Bukkit.getGlobalRegionScheduler().runDelayed(BankPlus.INSTANCE(), (task) -> {
                 p.sendMessage(" ");
                 p.sendMessage(MiniMessage.miniMessage().deserialize(message));
                 p.sendMessage(" ");

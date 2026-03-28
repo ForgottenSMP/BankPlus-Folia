@@ -1,6 +1,7 @@
 package me.pulsi_.bankplus.listeners.playerChat;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import me.pulsi_.bankplus.BankPlus;
 import me.pulsi_.bankplus.account.BPPlayer;
 import me.pulsi_.bankplus.account.PlayerRegistry;
@@ -68,8 +69,8 @@ public class PlayerChatMethod {
     }
 
     public static void reopenBank(BPPlayer bpPlayer, BankGui openedBankGui) {
-        Bukkit.getScheduler().runTask(BankPlus.INSTANCE(), () -> {
-            BukkitTask task = bpPlayer.getClosingTask();
+        Bukkit.getGlobalRegionScheduler().run(BankPlus.INSTANCE(), (task1) -> {
+            ScheduledTask task = bpPlayer.getClosingTask();
             if (task != null) task.cancel();
 
             removeFromTyping(bpPlayer);
@@ -78,7 +79,7 @@ public class PlayerChatMethod {
     }
 
     private static void executeExitCommands(Player p) {
-        Bukkit.getScheduler().runTask(BankPlus.INSTANCE(), () -> {
+        Bukkit.getGlobalRegionScheduler().run(BankPlus.INSTANCE(), (task) -> {
             for (String cmd : ConfigValues.getExitCommands()) {
                 if (cmd.startsWith("[CONSOLE]")) {
                     String s = cmd.replace("[CONSOLE] ", "").replace("%player%", p.getName());

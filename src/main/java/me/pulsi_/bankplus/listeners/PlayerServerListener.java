@@ -1,5 +1,6 @@
 package me.pulsi_.bankplus.listeners;
 
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import me.pulsi_.bankplus.BankPlus;
 import me.pulsi_.bankplus.account.BPPlayer;
 import me.pulsi_.bankplus.account.PlayerRegistry;
@@ -26,7 +27,7 @@ public class PlayerServerListener implements Listener {
     public void onJoin(PlayerJoinEvent e) {
         Player p = e.getPlayer();
 
-        Bukkit.getScheduler().runTaskAsynchronously(BankPlus.INSTANCE(), () -> {
+        Bukkit.getAsyncScheduler().runNow(BankPlus.INSTANCE(), (task) -> {
             boolean wasRegistered = BPSQL.isRegistered(p, ConfigValues.getMainGuiName());
             if (!wasRegistered && ConfigValues.isNotifyingNewPlayer())
                     BPLogger.Console.info("Successfully registered " + p.getName() + "!");
@@ -35,7 +36,7 @@ public class PlayerServerListener implements Listener {
 
             int loadDelay = ConfigValues.getLoadDelay();
             if (loadDelay <= 0) PlayerRegistry.loadPlayer(p, wasRegistered);
-            else Bukkit.getScheduler().runTaskLater(BankPlus.INSTANCE(), () -> PlayerRegistry.loadPlayer(p, wasRegistered), loadDelay);
+            else Bukkit.getGlobalRegionScheduler().runDelayed(BankPlus.INSTANCE(), (task1) -> PlayerRegistry.loadPlayer(p, wasRegistered), loadDelay);
 
             if (!ConfigValues.isNotifyingOfflineInterest()) return;
 
@@ -51,7 +52,7 @@ public class PlayerServerListener implements Listener {
             BigDecimal finalAmount = amount;
             String mess = BPMessages.applyMessagesPrefix(ConfigValues.getOfflineInterestMessage());
             if (finalAmount.compareTo(BigDecimal.ZERO) > 0)
-                Bukkit.getScheduler().runTaskLater(BankPlus.INSTANCE(), () ->
+                Bukkit.getGlobalRegionScheduler().runDelayed(BankPlus.INSTANCE(), (task1) ->
                                 BPMessages.sendMessage(p, mess, BPUtils.placeValues(finalAmount)),
                         ConfigValues.getNotifyOfflineInterestDelay() * 20L);
         });
@@ -63,7 +64,7 @@ public class PlayerServerListener implements Listener {
 
         BPPlayer player = PlayerRegistry.get(p);
         if (player != null) {
-            BukkitTask updating = player.getBankUpdatingTask();
+            ScheduledTask updating = player.getBankUpdatingTask();
             if (updating != null) updating.cancel();
 
             player.setDepositing(false);
