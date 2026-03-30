@@ -57,6 +57,7 @@ public class BPCmdRegistry {
         new UpgradeCmd(commandsConfig, "upgrade").register();
         new ViewCmd(commandsConfig, "view").register();
         new WithdrawCmd(commandsConfig, "withdraw").register();
+        new TransferCmd(commandsConfig, "transfer").register();
 
         try {
             commandsConfig.save(commandsFile);

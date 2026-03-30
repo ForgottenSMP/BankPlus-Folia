@@ -6,6 +6,7 @@ import me.pulsi_.bankplus.economy.BPEconomy;
 import me.pulsi_.bankplus.utils.BPLogger;
 import me.pulsi_.bankplus.values.ConfigValues;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -243,6 +244,28 @@ public class BPSQL {
         } catch (SQLException e) {
             BPLogger.Console.error(e, "Cannot save player " + player.getName() + " in bank " + bankName + ".");
         }
+    }
+
+    public static void savePlayer(OfflinePlayer player, BPEconomy eco, YamlConfiguration config) {
+        String bankName = eco.getOriginBank().getIdentifier();
+        String query;
+        if (ConfigValues.isMySqlEnabled())
+            query = "INSERT INTO " + bankName + " (uuid, bank_level, debt, money) " +
+                    "VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE " +
+                    "bank_level=VALUES(bank_level), debt=VALUES(debt), money=VALUES(money)";
+        else query = "INSERT INTO " + bankName + " (uuid, bank_level, debt, money) " +
+                "VALUES (?, ?, ?, ?) ON CONFLICT(uuid) DO UPDATE SET " +
+                "bank_level=excluded.bank_level, debt=excluded.debt, money=excluded.money";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, player.getUniqueId().toString());
+            statement.setString(2, config.getString(eco.levelPath));
+            statement.setString(3, config.getString(eco.debtPath));
+            statement.setString(4, config.getString(eco.moneyPath));
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            BPLogger.Console.error(e, "Cannot save player " + player.getName() + " in bank " + bankName + ".");
+        }
+
     }
 
     /**

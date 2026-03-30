@@ -32,7 +32,7 @@ public class BPEconomy {
     private final HashMap<UUID, Holder> holders = new HashMap<>();
     private final Set<UUID> operations = new HashSet<>();
 
-    private final String moneyPath, interestPath, debtPath, levelPath;
+    public final String moneyPath, interestPath, debtPath, levelPath;
 
     public BPEconomy(Bank originBank) {
         this.originBank = originBank;
