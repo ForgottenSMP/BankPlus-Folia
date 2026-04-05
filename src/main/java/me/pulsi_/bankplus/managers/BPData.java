@@ -28,6 +28,8 @@ import me.pulsi_.bankplus.values.MultipleBanksValues;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 
+import java.util.logging.Logger;
+
 public class BPData {
 
     private boolean start = true;
@@ -77,13 +79,24 @@ public class BPData {
     public boolean reloadPlugin() {
         boolean success = true;
         try {
+            Logger l = BankPlus.INSTANCE().getLogger();
+
+            l.info("Configuring plugin values...");
             ConfigValues.setupValues();
+
+            l.info("Configuring plugin messages...");
             MessageValues.setupValues();
+
+            l.info("Configuring plugin multiple banks values...");
             MultipleBanksValues.setupValues();
 
+            l.info("Reloading plugin commands...");
             BPCmdRegistry.registerPluginCommands();
+
+            l.info("Reloading plugin logger...");
             BPLogger.LogsFile.setupLoggerFile();
 
+            l.info("Setting up possibles");
             if (ConfigValues.isIgnoringAfkPlayers()) plugin.getAfkManager().startCountdown();
             if (ConfigValues.isBankTopEnabled() && !BPTaskManager.contains(BPTaskManager.BANKTOP_BROADCAST_TASK)) BPBankTop.restartBankTopUpdateTask();
 
@@ -94,16 +107,25 @@ public class BPData {
             if (ConfigValues.isInterestEnabled() && interest.wasDisabled()) interest.restartInterest(start);
 
             // Load the banks to the registry before to make MySQL able to create the tables.
+            l.info("Loading banks...");
             BankRegistry.loadBanks();
 
+            l.info("Reloading SQL connection...");
             BPSQL.disconnect();
-            if (ConfigValues.isMySqlEnabled()) BPSQL.MySQL.connect();
-            else BPSQL.SQLite.connect();
+            if (ConfigValues.isMySqlEnabled()) {
+                l.info("Connecting to MySQL database...");
+                BPSQL.MySQL.connect();
+            } else {
+                l.info("Connecting to SQLite database...");
+                BPSQL.SQLite.connect();
+            }
 
             // Do this check to avoid restarting the saving interval if another one is finishing.
+            l.info("Restarting money saving task...");
             if (!BPTaskManager.contains(BPTaskManager.MONEY_SAVING_TASK)) EconomyUtils.restartSavingInterval();
 
             Bukkit.getOnlinePlayers().forEach(p -> {
+                l.info("Reloading " + p.getName() + "'s data...");
                 BPPlayer player = PlayerRegistry.get(p);
                 if (player != null && player.getOpenedBank() != null) p.closeInventory();
             });

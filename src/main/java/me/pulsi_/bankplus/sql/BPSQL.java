@@ -227,6 +227,8 @@ public class BPSQL {
         String debt = bankEconomy.getDebt(player).toPlainString();
         String money = bankEconomy.getBankBalance(player).toPlainString();
 
+        BankPlus.INSTANCE().getLogger().info("Saving " + player.getName() + " in bank " + bankName + ": level=" + level + ", debt=" + debt + ", money=" + money);
+
         String query;
         if (ConfigValues.isMySqlEnabled())
             query = "INSERT INTO " + bankName + " (uuid, bank_level, debt, money) " +
@@ -343,10 +345,10 @@ public class BPSQL {
                 connection = DriverManager.getConnection(url, ConfigValues.getMySqlUsername(), ConfigValues.getMySqlPassword());
 
                 // Create all the missing tables.
-                for (String bankName : BPEconomy.nameList()) {
+                /*for (String bankName : BPEconomy.nameList()) {
                     String query = "CREATE TABLE IF NOT EXISTS " + bankName + " (" + GET_TABLE_ARGUMENTS() + ")";
                     connection.prepareStatement(query).execute();
-                }
+                }*/
             } catch (SQLException e) {
                 BPLogger.Console.error(e, "Could not connect to MySQL database.");
             }

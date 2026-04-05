@@ -51,6 +51,7 @@ public class EconomyUtils {
         if (async) {
             Bukkit.getAsyncScheduler().runNow(BankPlus.INSTANCE(), (task) -> {
                 for (UUID uuid : loadedUUIDs) {
+                    BankPlus.INSTANCE().getLogger().info("Saving " + Bukkit.getOfflinePlayer(uuid).getName() + "'s balance...");
                     OfflinePlayer p = Bukkit.getOfflinePlayer(uuid);
                     savePlayer(p, !p.isOnline());
                 }
@@ -72,6 +73,14 @@ public class EconomyUtils {
         if (delay <= 0) return;
 
         long minutes = delay * 1200L;
-        BPTaskManager.setTask(BPTaskManager.MONEY_SAVING_TASK, Bukkit.getGlobalRegionScheduler().runAtFixedRate(BankPlus.INSTANCE(), (task) -> saveEveryone(true), minutes, minutes));
+        BPTaskManager.setTask(
+                BPTaskManager.MONEY_SAVING_TASK,
+                Bukkit.getGlobalRegionScheduler()
+                        .runAtFixedRate(
+                                BankPlus.INSTANCE(),
+                                (task) -> saveEveryone(true),
+                                minutes, minutes
+                        )
+        );
     }
 }

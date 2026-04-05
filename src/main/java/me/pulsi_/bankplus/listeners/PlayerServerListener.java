@@ -31,6 +31,8 @@ public class PlayerServerListener implements Listener {
             boolean wasRegistered = BPSQL.isRegistered(p, ConfigValues.getMainGuiName());
             if (!wasRegistered && ConfigValues.isNotifyingNewPlayer())
                     BPLogger.Console.info("Successfully registered " + p.getName() + "!");
+            else
+                BPLogger.Console.info("Loaded " + p.getName() + "'s data! (Was registered: " + wasRegistered + ")");
 
             BPSQL.fillRecords(p);
 

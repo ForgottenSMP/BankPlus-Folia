@@ -1,6 +1,7 @@
 package me.pulsi_.bankplus;
 
 import me.pulsi_.bankplus.interest.BPInterest;
+import me.pulsi_.bankplus.listeners.PlayerServerListener;
 import me.pulsi_.bankplus.managers.BPAFK;
 import me.pulsi_.bankplus.managers.BPConfigs;
 import me.pulsi_.bankplus.managers.BPData;
@@ -12,6 +13,7 @@ import me.pulsi_.bankplus.values.ConfigValues;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -106,6 +108,11 @@ public final class BankPlus extends JavaPlugin {
 
         if (ConfigValues.isUpdateCheckerEnabled())
             Bukkit.getAsyncScheduler().runAtFixedRate(this, (task) -> isUpdated = isPluginUpdated(), 0, 8, TimeUnit.HOURS);
+
+        Bukkit.getOnlinePlayers().forEach((player) -> {
+            PlayerJoinEvent event = new PlayerJoinEvent(player, "");
+            new PlayerServerListener().onJoin(event);
+        });
     }
 
     @Override
